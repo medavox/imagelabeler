@@ -1,0 +1,5 @@
+posX = ( (pixels left) / (width) ) * scale
+posY = ( (pixels above) / (height) ) * scale
+
+posX += mouseX
+posY += mouseY

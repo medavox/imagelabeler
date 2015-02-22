@@ -1,0 +1,9 @@
+Bugs in ImageTagger in version 0.2 (working window resizing)
+
+*image does not draw when window is maximised(cause: resize listener is also executed, after maxmization listener)
+
+TODO:
+zooming, scrolling images
+coordinate-based labeling
+label formatting
+load and save of labels

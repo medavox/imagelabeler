@@ -1,0 +1,15 @@
+ the x and y of the image (scaled) plus the x,y coords of the mouse X
+
+the same proportion of the image is above & below (and left and right) 
+	of the mouse as before zooming took place
+
+mentally drawing a frame (centered around the mouse) around the part of the image which will be visible
+after zooming -- no, that will centre the zoomed image on the mouse
+
+visible pixels above = mouse Y -1
+visible pixels below = viewport height - mouse Y
+
+visible pixels left = mouse X -1
+visible pixels below = viewport width - mouse X
+
+tota pixels above = 
