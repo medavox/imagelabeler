@@ -17,12 +17,17 @@ public class ImageTagger extends JFrame implements ActionListener
 	private static Runtime rt = Runtime.getRuntime();
 	public ImagePanel imagePanel = new ImagePanel(this);
 	private int currentImageIndex;
-	private JPanel bottomButtonPanel = new JPanel();
+	
 	private static FileNameExtensionFilter imagesOnly =
 		new FileNameExtensionFilter("Images", "jpg", "jpeg", "png", "gif");
 	private File[] filesToRead;
+    
 	private JButton prevButton;
 	private JButton nextButton;
+	private JButton prevZoomButton;
+	private JButton normalZoomButton;
+	private JButton fitZoomButton;
+    
 	private BufferedImage currentImage;
 	private File debugFile = new File("debug.log");
 	private PrintStream stdOut = System.out;
@@ -58,19 +63,40 @@ public class ImageTagger extends JFrame implements ActionListener
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//add the imagepanel
 		add(imagePanel);
+        
+        //JPanel bottomButtonPanel = new JPanel();
+        JPanel middleRow = new JPanel();
 
 		//configure the buttonPanel before displaying window. This allows the panel to display properly on startup.
-		bottomButtonPanel.setLayout(new BorderLayout(5, 5) );
+		JPanel bottomButtonPanel = new JPanel(new BorderLayout(5, 5) );
 		ImageIcon prevIcon = new ImageIcon("images/go-previous.png");
 		ImageIcon nextIcon = new ImageIcon("images/go-next.png");
 		ImageIcon prevIconDisabled = new ImageIcon("images/go-previous-disabled.png");
 		ImageIcon nextIconDisabled = new ImageIcon("images/go-next-disabled.png");
+        
+		ImageIcon prevZoomIcon = new ImageIcon("images/prev-zoom.png");
+		ImageIcon normalZoomIcon = new ImageIcon("images/normal-zoom.png");
+		ImageIcon fitZoomIcon = new ImageIcon("images/fit-zoom.png");
+        
 		prevButton = new JButton(prevIcon);
 		nextButton = new JButton(nextIcon);
+        
+		prevZoomButton = new JButton(prevZoomIcon);
+		normalZoomButton = new JButton(normalZoomIcon);
+		fitZoomButton = new JButton(fitZoomIcon);
+        
 		nextButton.setDisabledIcon(nextIconDisabled);
 		prevButton.setDisabledIcon(prevIconDisabled);
 		bottomButtonPanel.add(prevButton, BorderLayout.WEST);
 		bottomButtonPanel.add(nextButton, BorderLayout.EAST);
+        
+        middleRow.setLayout(new BoxLayout(middleRow, BoxLayout.X_AXIS));
+        middleRow.add(prevZoomButton);
+        middleRow.add(normalZoomButton);
+        middleRow.add(fitZoomButton);
+        
+		bottomButtonPanel.add(middleRow, BorderLayout.CENTER);
+        
 		//bottomButtonPanel.repaint(bottomButtonPanel.getBounds());
 		
 		//add the buttonPanel to the main window, and make the main window visible.
@@ -80,6 +106,10 @@ public class ImageTagger extends JFrame implements ActionListener
 		//set this class as the actionListener for the next and previous buttons.
 		nextButton.addActionListener(this);
 		prevButton.addActionListener(this);
+        
+		prevZoomButton.addActionListener(this);
+		normalZoomButton.addActionListener(this);
+		fitZoomButton.addActionListener(this);
 		
 		//debug messages from validator code.
 		debugPrint("Max Memory: " + (rt.maxMemory() / 1048576) + "MB" );
@@ -203,6 +233,9 @@ public class ImageTagger extends JFrame implements ActionListener
 			}
 			else
 			{prevButton.setEnabled(true);}
+            imagePanel.loadImage(filesToRead[currentImageIndex]);
+            long usedMem = rt.totalMemory() - rt.freeMemory();
+            debugPrint("Used memory: "+ (usedMem/1024)+"KB");	
 		}
 		else if(jb == prevButton)
 		{
@@ -214,13 +247,26 @@ public class ImageTagger extends JFrame implements ActionListener
 			}
 			else
 			{nextButton.setEnabled(true);}
+            imagePanel.loadImage(filesToRead[currentImageIndex]);
+            long usedMem = rt.totalMemory() - rt.freeMemory();
+            debugPrint("Used memory: "+ (usedMem/1024)+"KB");	
 		}
+        else if(jb == prevZoomButton)
+        {
+            
+        }
+        else if(jb == normalZoomButton)
+        {
+            imagePanel.normalZoom();
+            imagePanel.repaint();
+        }
+        else if(jb == fitZoomButton)
+        {
+            imagePanel.fitImage();
+            imagePanel.repaint();
+        }
 		else
 		{System.err.println("failed to click a button: "+jb);}
-		
-		imagePanel.loadImage(filesToRead[currentImageIndex]);
-		long usedMem = rt.totalMemory() - rt.freeMemory();
-		debugPrint("Used memory: "+ (usedMem/1024)+"KB");	
 	}
 	
 	public static void main(String[] args)

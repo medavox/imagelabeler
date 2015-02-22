@@ -20,15 +20,18 @@ public class ImagePanel extends JComponent implements MouseListener, MouseWheelL
 	private BufferedImage currentImage;
 	private double scale = 1;
 	private double zoomAmount = 1.1;
-	private int imageWidth = 0;
-	private int imageHeight = 0;
+
 	private double placementX;
 	private double placementY;
+    private double drawHeight;
+    private double drawWidth;
 	private int mouseX = 0;
 	private int mouseY = 0;
 	
-	private int oldDragX = -99999;
-	private int oldDragY = -99999;
+    int bogus = -999999;
+    
+	private int oldDragX = bogus;
+	private int oldDragY = bogus;
 	
 	private boolean firstPaint = true;
 	private String imageFilename = "";
@@ -56,7 +59,8 @@ public class ImagePanel extends JComponent implements MouseListener, MouseWheelL
 			parent.debugPrint("Image Width: "+currentImage.getWidth());
 			parent.debugPrint("Image Height: "+currentImage.getHeight());
 			double aspectRatio = (double)currentImage.getWidth() / (double)currentImage.getHeight();
-			parent.debugPrint("Aspect Ratio: "+aspectRatio);
+			//parent.debugPrint("Aspect Ratio: "+aspectRatio);
+			System.out.println("Aspect Ratio: "+aspectRatio);
 			firstPaint = true;
 			repaint();
 		}
@@ -71,6 +75,53 @@ public class ImagePanel extends JComponent implements MouseListener, MouseWheelL
 		{System.err.println("OutOfMemoryError: "+memError.getMessage()+
 			" on file "+imageToLoad+"; continuing ONWARDS!");}
 	}
+    
+    public void fitImage()
+    {
+        //find out how much larger each dimension of the image is than the window;
+        double overWidth = (double)currentImage.getWidth() / (double)getWidth();
+        double overHeight = (double)currentImage.getHeight() / (double)getHeight();
+        if(overWidth >= overHeight)
+        {
+            //if the width is bigger, draw the sides of the image up to the window edges,
+            // effectively scaling it down by overWidth,
+            //and scaling the verticals down by the same amount by
+            // setting the height to the normal height / overWidth.
+            drawWidth = getWidth();
+            drawHeight = (double)currentImage.getHeight()/overWidth;
+            placementX = 0;
+            placementY = (getHeight()/2) - drawHeight/2;//centre the image's Y.
+            
+            //double imgHeight = (double)currentImage.getHeight()/overWidth;
+            //placementY = (getHeight()/2) - imgHeight/2;//centre the image's Y.
+            
+            //g.drawImage(currentImage, 0, (int)placementY, getWidth(), (int)imgHeight, this);
+            scale = 1.0 / overWidth;
+        }
+        else if (overWidth < overHeight)
+        {
+            //same here, but vice versa.
+            drawWidth = (double)currentImage.getWidth()/overHeight;
+            drawHeight = getHeight();
+            placementX = (getWidth()/2) - drawWidth/2;//centre the image's X.
+            placementY = 0;
+            //g.drawImage(currentImage, (int)placementX, 0, (int)imgWidth, getHeight(), this);
+            scale = 1.0 / overHeight;
+        }
+    }
+    
+    public void normalZoom()
+    {
+        //System.out.println("normal zoom!");
+        scale = 1;
+        //drawWidth = (double)currentImage.getWidth();
+        //drawHeight = (double)currentImage.getHeight();
+
+        //g.drawImage(currentImage, (int)placementX, (int)placementY,(int)placementWidth, (int)placementHeight, this);
+
+        //parent.stdPrint("current image width:"+placementWidth);
+        //parent.stdPrint("current image height:"+placementHeight);
+    }
 	
 	public void paint(Graphics g)
 	{
@@ -78,81 +129,44 @@ public class ImagePanel extends JComponent implements MouseListener, MouseWheelL
 		{
 			Graphics2D g2 = (Graphics2D)g;
 			//find out how much larger each dimension of the image is than the window;
-			double overWidth = (double)currentImage.getWidth() / (double)getWidth();
-			double overHeight = (double)currentImage.getHeight() / (double)getHeight();
 			
 			//before drawing the new image, clear the old one.
 			g.clearRect(0,0,getWidth(),getHeight());
-				/*AffineTransform at = AffineTransform.getScaleInstance(scaleAmount, scaleAmount);
-				AffineTransformOp aop = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR );
-				g2.drawImage(currentImage, aop, 0, 0);
-				g.drawImage(bi,
-				0, 0, w, h,     
-                0, 0, w/2, h/2,
-                null)*/
-				/*g2.drawImage(currentImage, 
-				AffineTransform.getScaleInstance(scaleAmount, scaleAmount),
-				 this);*/
+            System.out.println("firstPaint:"+firstPaint);
 			if(firstPaint)//first time we draw a new image, make it fit the window
 			{
+                //find out how much larger each dimension of the image is than the window;
 				firstPaint = false;
-				if(overWidth >= overHeight)
-				{
-					//if the width is bigger, draw the sides of the image up to the window edges,
-					// effectively scaling it down by overWidth,
-					//and scaling the verticals down by the same amount by
-					// setting the height to the normal height / overWidth.
-					double imgHeight = (double)currentImage.getHeight()/overWidth;
-					placementY = (getHeight()/2) - imgHeight/2;//centre the image's Y.
-					g.drawImage(currentImage, 0, (int)placementY, getWidth(), (int)imgHeight, this);
-					scale = 1.0 / overWidth;
-				}
-				else if (overWidth < overHeight)
-				{
-					//same here, but vice versa.
-					double imgWidth = (double)currentImage.getWidth()/overHeight;
-					placementX = (getWidth()/2) - imgWidth/2;//centre the image's X.
-					g.drawImage(currentImage, (int)placementX, 0, (int)imgWidth, getHeight(), this);
-					scale = 1.0 / overHeight;
-				}
-				else
-				{//neither dimension of the image is bigger than the viewing area;
-					//draw image to normal scale
-					placementX = 
-						(getWidth()/2) - currentImage.getWidth()/2;//centre the image's X.
-					placementY = 
-						(getHeight()/2) - currentImage.getHeight()/2;//centre the image's Y.
-					g.drawImage(currentImage, (int)placementX, (int)placementY,
-					 currentImage.getWidth(), currentImage.getHeight(), this);
-				}
-				System.out.println("placementX,Y:"+placementX+","+placementY);
+
+                double overWidth = (double)currentImage.getWidth() / (double)getWidth();
+                double overHeight = (double)currentImage.getHeight() / (double)getHeight();
+                if(overWidth > 1.0
+                || overHeight > 1.0)
+                {
+                    fitImage();
+                }
+                else
+                {
+                    normalZoom();
+                }
+                System.out.println("shaboieeee");
 			}
 			else
 			{//no longer first paint -- do zooming to mouse
-				double placementWidth = (double)currentImage.getWidth() * scale;
-				double placementHeight = (double)currentImage.getHeight() * scale;
+				drawWidth = (double)currentImage.getWidth() * scale;
+				drawHeight = (double)currentImage.getHeight() * scale;
 
-				g.drawImage(currentImage, (int)placementX, (int)placementY,
-				(int)placementWidth, (int)placementHeight, this);
+				//g.drawImage(currentImage, (int)placementX, (int)placementY,
+				//(int)placementWidth, (int)placementHeight, this);
 
 				//parent.stdPrint("current image width:"+placementWidth);
 				//parent.stdPrint("current image height:"+placementHeight);
+                parent.stdPrint("zoom:"+(scale*100));
 			}
+            //draw the image with the inferred parameters
+            g.drawImage(currentImage, (int)placementX, (int)placementY, (int)drawWidth, (int)drawHeight, this);
 			
 			parent.setTitle(imageFilename+" -- "+((int)(scale*100))+"%");
-			/*//attempt at one-case-fits-all generalised code -- 
-			 * //sadly scales the smaller dimension up to the viewing area atm
-			 * //-- needs to preserve aspect ratio
-				double placementX = Math.max((getWidth()/2) - currentImage.getWidth()/2, 0);//centre the image's X.
-				double placementY = Math.max((getHeight()/2) - currentImage.getHeight()/2, 0);//centre the image's Y.
-				int placementWidth = Math.min(currentImage.getWidth(),getWidth());
-				int placementHeight = Math.min(currentImage.getHeight(),getHeight());
-				g.drawImage(currentImage,
-						(int)placementX,
-						(int)placementY,
-						placementWidth,
-						placementHeight,
-						this);*/
 		}
 	}
 	
